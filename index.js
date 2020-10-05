@@ -26,7 +26,22 @@ function openTab(evt, tabName) {
     evt.currentTarget.className += " active";
   }
 
-function changeConnectionStatus(mode, ip) {
+function connectionClosed(event) {
+    if (event.wasClean) {
+        console.log(`[WebSocket] Connection closed (code: ${event.code} | reason: ${event.reason})`);
+      } else {
+        // e.g. server process killed or network down
+        // event.code is usually 1006 in this case
+        alert('[WebSocket] Connection died. (code: ${event.code} | reason: ${event.reason})');
+      }
+}
+
+function connectionOpened(name) {
+    console.log("[WebSocket] Connection Established.");
+    socket.send("[LOGIN] name="+name);
+}
+
+function changeConnectionStatus(mode, ip, name) {
     if (mode === "disconnect") {
         connection.open = false;
         serverStatusLabel.innerHTML = "Disconnected";
@@ -39,9 +54,19 @@ function changeConnectionStatus(mode, ip) {
         if (ip == "") {
             console.log(ip)
             connection.ws = new WebSocket(ip);
-
-
-
+            socket.onopen = function(e) {connectionOpened(name)};
+            socket.onclose = function(event) {connectionClosed(event)};
+            socket.onerror = function(error) {console.error(`${error.message}`)};
+            socket.onmessage = function(event) {
+                let message = event.data;
+                if (message.includes("[USERS]")) {
+                    // parse and update users list
+                } else if (message.includes("[CHAT]")) {
+                    // parse and add chat message
+                } if (message.includes("[SYNC]")) {
+                    // parse and update video src and time
+                }
+            };
         } else { 
             throw "connectNoIpProvided"
         }
