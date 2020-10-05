@@ -1,0 +1,44 @@
+
+<html>
+    <head>
+        <title>WatchWithMe</title>
+        <link rel="stylesheet" href="index.css">
+        </head>
+    <body>
+        <h1>WatchWithMe</h1>
+
+
+        <div class="tab">
+            <button id="connectBtn" class="tablinks" onclick="openTab(event, 'connectTab')">Connect</button>
+            <button id="watchBtn" class="tablinks"onclick="openTab(event, 'WatchTab')">Watch</button>
+            <button id="chatBtn" class="tablinks" onclick="openTab(event, 'chatTab')">Chat</button>
+            <button id="usersBtn" class="tablinks" onclick="openTab(event, 'usersTab')">Users</button>
+        </div>
+          
+        <div id="connectTab" class="tabcontent">
+            <h3>Connect</h3>
+
+        </div>
+          
+        <div id="WatchTab" class="tabcontent">
+            <h3>Watch</h3>
+
+        </div>
+          
+        <div id="chatTab" class="tabcontent">
+            <h3>Chat</h3>
+            
+        </div>
+          
+        <div id="usersTab" class="tabcontent">
+            <h3>Connected Users</h3>
+            
+        </div>
+
+
+        <div class="fixed">
+            <p id="serverStatus">Checking Status...</p>
+        </div>
+        <script src="index.js"></script>
+    </body>
+</html>
