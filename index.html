@@ -9,15 +9,18 @@
 
 
         <div class="tab">
-            <button id="connectBtn" class="tablinks" onclick="openTab(event, 'connectTab')">Connect</button>
+            <button id= "connectionBtn" class="tablinks" onclick="openTab(event, 'connectTab')">Connection</button>
             <button id="watchBtn" class="tablinks"onclick="openTab(event, 'WatchTab')">Watch</button>
             <button id="chatBtn" class="tablinks" onclick="openTab(event, 'chatTab')">Chat</button>
             <button id="usersBtn" class="tablinks" onclick="openTab(event, 'usersTab')">Users</button>
         </div>
           
         <div id="connectTab" class="tabcontent">
-            <h3>Connect</h3>
-
+            <h3>Connection</h3>
+            <input id= "IPInput" placeholder="IP Address"><br>
+            <input id= "NameInput" placeholder="Name"><br>
+            <br>
+            <button id="connectBtn">Connect</button>
         </div>
           
         <div id="WatchTab" class="tabcontent">
@@ -27,11 +30,13 @@
           
         <div id="chatTab" class="tabcontent">
             <h3>Chat</h3>
-            
+            <div class="chatBox" id="chatDiv"></div><br>
+            <input class="chatBox" id="chatBoxInput" onkeyup="if(event.key === 'Enter') sendChatMessage(document.getElementById('chatBoxInput').value)">
         </div>
           
         <div id="usersTab" class="tabcontent">
             <h3>Connected Users</h3>
+            <div id="usersList"></div>
             
         </div>
 
