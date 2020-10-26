@@ -2,7 +2,7 @@
 <html>
     <head>
         <title>WatchWithMe</title>
-        <link rel="stylesheet" href="index.css">
+        <link rel="stylesheet" href="client.css">
         </head>
     <body>
         <h1>WatchWithMe</h1>
@@ -25,7 +25,10 @@
           
         <div id="WatchTab" class="tabcontent">
             <h3>Watch</h3>
-
+            <input class="chatBox" id="videoURLInput">
+            <button id="watchYTBtn" onclick="watchVideoYT(document.getElementById('videoURLInput').value)" >YouTube</button>
+            <div id="playerYouTube" style="visibility: hidden;"></div>
+            <div id="playerLocal" style="visibility: hidden;"></div>
         </div>
           
         <div id="chatTab" class="tabcontent">
@@ -42,8 +45,9 @@
 
 
         <div class="fixed">
-            <p id="serverStatus">Checking Status...</p>
+            <div style="text-align: left; float: left;">v. 0.1</div>
+            <div id="serverStatus">Checking Status...</div>
         </div>
-        <script src="index.js"></script>
+        <script src="client.js"></script>
     </body>
 </html>

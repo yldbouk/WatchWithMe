@@ -1,22 +1,77 @@
 // init website
 //set vars
 
-var serverStatusLabel = document.getElementById("serverStatus");
-var connectionBtn = document.getElementById("connectionBtn");
-var watchBtn = document.getElementById("watchBtn");
-var chatBtn = document.getElementById("chatBtn");
-var usersBtn = document.getElementById("usersBtn");
-var nameInput = document.getElementById("NameInput");
-var IPInput = document.getElementById("IPInput");
-var connectBtn = document.getElementById("connectBtn");
-var usersList = document.getElementById("usersList");
-var chatDiv = document.getElementById("chatDiv");
-var chatInput = document.getElementById("chatBoxInput");
+var serverStatusLabel = document.getElementById("serverStatus"),
+    connectionBtn = document.getElementById("connectionBtn"),
+    watchBtn = document.getElementById("watchBtn"),
+    chatBtn = document.getElementById("chatBtn"),
+    usersBtn = document.getElementById("usersBtn"),
+    nameInput = document.getElementById("NameInput"),
+    IPInput = document.getElementById("IPInput"),
+    connectBtn = document.getElementById("connectBtn"),
+    usersList = document.getElementById("usersList"),
+    chatDiv = document.getElementById("chatDiv"),
+    chatInput = document.getElementById("chatBoxInput"),
+    videoContainer = document.getElementById("videoContainer"),
+    videoURLInput = document.getElementById("videoURLInput"),
+    playerYouTube = document.getElementById("playerYouTube"),
 
-var connection = { ws: null, users: [], video: {} };
+    player,
+    youtubeVideoID,
+    tag = document.createElement('script'),
+    firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    tag.src = "https://www.youtube.com/iframe_api";
+
+    var connection = { ws: null, users: [], video: {} };
+    window.onbeforeunload = function(){if(connection.ws !== null){connection.ws.close(); return "haha";}};
 
 
 // define functions
+
+//-----------------------------------------YOUTUBE FUNCTIONS
+//-----------------------------------------YOUTUBE FUNCTIONS
+//-----------------------------------------YOUTUBE FUNCTIONS
+
+function watchVideoYT(url) {
+    if (url.includes("v=")) { // parse and get video id
+        youtubeVideoID = url.split("v=")[1];
+        youtubeVideoID = youtubeVideoID.split("&")[0];
+        console.log("Parsed: " + youtubeVideoID);
+    } else if (url.includes("youtu.be/")) {
+        youtubeVideoID = url.split("youtu.be/")[1];
+    }
+    if (youtubeVideoID == undefined) {
+        alert("Unable to detect YouTube Video ID. Is this a YouTube Video?");
+        return
+    }
+
+    //send request to play
+    connection.ws.send("[PLAYYT] " + youtubeVideoID);
+}
+
+function onPlayerReady(event) {
+    //event.target.playVideo();
+    connection.ws.send("[SYNC] " + youtubeVideoID + " READYTOSTART");
+    }
+
+function onPlayerStateChange(event) {
+    console.warn("[SYNC] " + youtubeVideoID + " STATE CHANGED: " + JSON.stringify(event.data));
+
+   
+
+    }
+
+function onSeek(){
+    player.stopVideo();
+    connection.ws.send("[SYNC] SEEK " + player.getCurrentTime);
+}
+
+
+
+//-----------------------------------------
+//-----------------------------------------
+//-----------------------------------------
 
 function openTab(evt, tabName) {
     var i, tabcontent, tablinks;
@@ -35,10 +90,11 @@ function openTab(evt, tabName) {
 function connectionClosed(event) {
     if (event.wasClean) {
         console.log(`[WebSocket] Connection closed (code: ${event.code} | reason: ${event.reason})`);
-      } else { // check codes
+      } else { 
         console.error(`[WebSocket] Connection DIED. (code: ${event.code} | reason: ${event.reason})`);
-        if (event.code == "1006") alert("Disconnected: The server did not respond."); 
     }
+    if (event.code == "1006") alert("Disconnected: The server did not respond."); else
+    if (event.code == "4001") alert("Disconnected: This username is already taken."); 
     changeConnectionStatus("disconnect");
 }
 
@@ -73,7 +129,10 @@ function changeConnectionStatus(mode, ip, name) {
         chatBtn.style = "visibility: hidden";
         usersBtn.style = "visibility: hidden";
         chatDiv.innerHTML = "";
+        playerYouTube.innerHTML = "";
+        player = null;
         nameInput.disabled = false;
+        connection.ws = null;
         IPInput.disabled = false;
         var evObj = document.createEvent('Events');
         evObj.initEvent("click", true, false);
@@ -119,13 +178,51 @@ function changeConnectionStatus(mode, ip, name) {
                     // dont mind my complicated way of doing things
                     console.debug("New Chat: " + message);
                     let content = JSON.parse(message.split("[CHAT] ")[1]);
-                    chatDiv.innerHTML = chatDiv.innerHTML + `<b style="color:lightgray;">(${content["username"]})</b> ${content["messageContent"]}<br>`;
+                    var color = "lightgrey";
+                    if (content["username"] === "SERVER") color = "orange";
+                    chatDiv.innerHTML = chatDiv.innerHTML + `<b style="color:${color};">(${content["username"]})</b> ${content["messageContent"]}<br>`;
                 } 
                 else
 
                 if (message.startsWith("[SYNC]")) {
-                    // parse and update video src and time
+                    // parse and do stuff
+                    let action = message.split("[SYNC] ")[1];
+
+                    if(action === "PLAY") player.playVideo(); else
+                    if(action === "PAUSE") player.pauseVideo(); else
+                    if(action === "STOP") player.stopVideo(); else
+                    if(action.includes("SEEK")){
+                        let time = action.split("SEEK ")[1];
+                        player.seekTo(time);
+                        player.pauseVideo();
+                    }
+                }
+
+                else
+
+                if (message.startsWith("[REJECT]")) {
+                    // the server rejected the last action
+                    alert("The server rejected your request.");
+                }
+                
+                else
+
+                if (message.startsWith("[PLAYYT]")) {
+                    let id = message.split("[PLAYYT] ")[1];
+                    youtubeVideoID = id;
+                    playerYouTube.style="visibility:visible;";
+                    player = new YT.Player('playerYouTube', {
+                        height: '390',
+                        width: '640',
+                        videoId: id,
+                        events: {
+                            'onReady': onPlayerReady,
+                            'onStateChange': onPlayerStateChange,
+                            'onSeek': onSeek
+                        }
+                    });
                 } 
+
                 else 
                 
                 console.error("Invalid Command Received: " + message)
