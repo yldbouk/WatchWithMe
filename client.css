@@ -71,3 +71,7 @@ input.chatbox {
     border-radius: 4px;
     box-sizing: border-box;
 }
+
+input.chatbox#videoURLInput {
+    width: 60%;
+}
