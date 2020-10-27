@@ -13,16 +13,30 @@ var serverStatusLabel = document.getElementById("serverStatus"),
     chatDiv = document.getElementById("chatDiv"),
     chatInput = document.getElementById("chatBoxInput"),
     videoURLInput = document.getElementById("videoURLInput"),
-    player = document.getElementById("playerLocal"),
-    currentlyPlayingURL;
-    
+    playerLocal = document.getElementById("playerlocal"),
+    youtubeVideoID,
+    localPlayerURL,
+    player = {
+        playVideo: function(){document.getElementById("player").play()},
+        pauseVideo: function(){document.getElementById("player").pause()},
+        play: function(url){
+            document.getElementById("player").style = "visibility: visible";
+            document.getElementById("player").innerHTML = "";
+            var newSource = '<source src=' + url + '>';
+            document.getElementById("player").insertAdjacentHTML('beforeend', newSource);
+            document.getElementById("player").load(url)
+        },
+        destroy: function(){
+            document.getElementById("player").innerHTML = ""; 
+            document.getElementById("player").load()
+        }
+    }
 
     var connection = { ws: null, users: [], video: {} };
     window.onbeforeunload = function(){if(connection.ws !== null){connection.ws.close(); return "haha";}};
 
 
 // define functions
-
 function openTab(evt, tabName) {
     var i, tabcontent, tablinks;
     tabcontent = document.getElementsByClassName("tabcontent");
@@ -68,6 +82,14 @@ function sendChatMessage(message) {
     chatInput.value = "";
 }
 
+function queueVideo(url) {
+    //check for youtube
+    if (url.includes("https://www.youtube.com/" || "https://yt.be/")){ watchVideoYT(url); return }
+        
+    connection.ws.send("[PLAY] " + url);
+        console.log("sent status");
+}
+
 function changeConnectionStatus(mode, ip, name) {
     if (mode === "disconnect") {
         if(connection.ws !== null) connection.ws.close();
@@ -79,6 +101,7 @@ function changeConnectionStatus(mode, ip, name) {
         chatBtn.style = "visibility: hidden";
         usersBtn.style = "visibility: hidden";
         chatDiv.innerHTML = "";
+        player.destroy();
         nameInput.disabled = false;
         connection.ws = null;
         IPInput.disabled = false;
@@ -138,7 +161,7 @@ function changeConnectionStatus(mode, ip, name) {
 
                     if(action === "PLAY") player.playVideo(); else
                     if(action === "PAUSE") player.pauseVideo(); else
-                    if(action === "STOP") player.stopVideo(); else
+                    if(action === "STOP") player.destroy(); else
                     if(action.includes("SEEK")){
                         let time = action.split("SEEK ")[1];
                         player.seekTo(time);
@@ -157,7 +180,12 @@ function changeConnectionStatus(mode, ip, name) {
 
                 if (message.startsWith("[PLAY]")) {
                    currentlyPlayingURL = message.split("[PLAY] ")[1];
+                } 
 
+                if (message.startsWith("[PLAY]")) {
+                    let url = message.split("[PLAY] ")[1];
+                    localPlayerURL = url;
+                    player.play(url);
                     
                     
                 } 

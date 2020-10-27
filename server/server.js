@@ -83,10 +83,10 @@ wsServer.on('request', function(request) {
             let URL = message.split("[PLAY] ")[1];
             console.log(new Date() + `CLient ${i} has requested to play URL: ${URL}`);
             if(video.state !== "stopped") {
-                // for now, reject playing new videos if one is already playing
-                clients[i].send("[REJECT]");
-                return
-            } 
+                video.state = "stopped";
+                broadcast("[SYNC] STOP");
+                setTimeout(()=>{broadcast("[PLAY] " + VID)}, 1000);
+            }
 
             //reset everyone's state to not ready
             clients.forEach(client =>client["PLAYERSTATE"] = "NOTREADY");
@@ -98,7 +98,31 @@ wsServer.on('request', function(request) {
             
             
             //broadcast("[CHAT] " + JSON.stringify(chatObject));
-        } 
+        }
+        
+        else 
+
+        if (message.startsWith("[PLAY]")) {
+            let VID = message.split("[PLAY] ")[1];
+            console.log(new Date() + `CLient ${i} has requested to play URL: ${VID}`);
+            if(video.state !== "stopped") {
+                video.state = "stopped";
+                broadcast("[SYNC] STOP");
+                setTimeout(()=>{broadcast("[PLAY] " + VID)}, 1000);
+            } 
+
+            //reset everyone's state to not ready
+            clients.forEach(client =>{if(client != null) client["PLAYERSTATE"] = "NOTREADY"});
+
+             video.platform = "url";
+             video.currentlyPlayingVideo = VID;
+             video.state = "waiting";
+
+             broadcast("[PLAY] " + VID);
+            
+            
+            //broadcast("[CHAT] " + JSON.stringify(chatObject));
+        }
       
         else
 
