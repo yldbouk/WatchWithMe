@@ -15,13 +15,25 @@ var serverStatusLabel = document.getElementById("serverStatus"),
     videoContainer = document.getElementById("videoContainer"),
     videoURLInput = document.getElementById("videoURLInput"),
     playerYouTube = document.getElementById("playerYouTube"),
-
-    player,
+    playerLocal = document.getElementById("playerlocal"),
     youtubeVideoID,
-    tag = document.createElement('script'),
-    firstScriptTag = document.getElementsByTagName('script')[0];
-    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-    tag.src = "https://www.youtube.com/iframe_api";
+    localPlayerURL,
+    player = {
+        playVideo: function(){document.getElementById("player").play()},
+        pauseVideo: function(){document.getElementById("player").pause()},
+        play: function(url){
+            document.getElementById("player").style = "visibility: visible";
+            document.getElementById("player").innerHTML = "";
+            var newSource = '<source src=' + url + '>';
+            document.getElementById("player").insertAdjacentHTML('beforeend', newSource);
+            document.getElementById("player").load(url)
+        },
+        destroy: function(){
+            document.getElementById("player").innerHTML = ""; 
+            document.getElementById("player").load()
+        }
+    }
+
 
     var connection = { ws: null, users: [], video: {} };
     window.onbeforeunload = function(){if(connection.ws !== null){connection.ws.close(); return "haha";}};
@@ -63,7 +75,7 @@ function onPlayerStateChange(event) {
     }
 
 function onSeek(){
-    player.stopVideo();
+    player.pauseVideo();
     connection.ws.send("[SYNC] SEEK " + player.getCurrentTime);
 }
 
@@ -118,6 +130,14 @@ function sendChatMessage(message) {
     chatInput.value = "";
 }
 
+function queueVideo(url) {
+    //check for youtube
+    if (url.includes("https://www.youtube.com/" || "https://yt.be/")){ watchVideoYT(url); return }
+        
+    connection.ws.send("[PLAY] " + url);
+        console.log("sent status");
+}
+
 function changeConnectionStatus(mode, ip, name) {
     if (mode === "disconnect") {
         if(connection.ws !== null) connection.ws.close();
@@ -129,8 +149,7 @@ function changeConnectionStatus(mode, ip, name) {
         chatBtn.style = "visibility: hidden";
         usersBtn.style = "visibility: hidden";
         chatDiv.innerHTML = "";
-        playerYouTube.innerHTML = "";
-        player = null;
+        player.destroy();
         nameInput.disabled = false;
         connection.ws = null;
         IPInput.disabled = false;
@@ -190,7 +209,7 @@ function changeConnectionStatus(mode, ip, name) {
 
                     if(action === "PLAY") player.playVideo(); else
                     if(action === "PAUSE") player.pauseVideo(); else
-                    if(action === "STOP") player.stopVideo(); else
+                    if(action === "STOP") player.destroy(); else
                     if(action.includes("SEEK")){
                         let time = action.split("SEEK ")[1];
                         player.seekTo(time);
@@ -210,7 +229,7 @@ function changeConnectionStatus(mode, ip, name) {
                 if (message.startsWith("[PLAYYT]")) {
                     let id = message.split("[PLAYYT] ")[1];
                     youtubeVideoID = id;
-                    playerYouTube.style="visibility:visible;";
+                //    playerYouTube.style="visibility:visible;";
                     player = new YT.Player('playerYouTube', {
                         height: '390',
                         width: '640',
@@ -221,6 +240,14 @@ function changeConnectionStatus(mode, ip, name) {
                             'onSeek': onSeek
                         }
                     });
+                } 
+
+                if (message.startsWith("[PLAY]")) {
+                    let url = message.split("[PLAY] ")[1];
+                    localPlayerURL = url;
+                    player.play(url);
+                    
+                    
                 } 
 
                 else 
