@@ -10,7 +10,7 @@ const { client } = require('websocket');
 const { brotliDecompress } = require('zlib');
 
 var clients = [ ],
-    video = {state: "stopped", platform: "none", currentlyPlayingVideo: null};
+    video = {state: "stopped", currentlyPlayingURL: null};
 
 var server = http.createServer(function(request, response) {
 });
@@ -79,9 +79,9 @@ wsServer.on('request', function(request) {
       
         else
         
-        if (message.startsWith("[PLAYYT]")) {
-            let VID = message.split("[PLAYYT] ")[1];
-            console.log(new Date() + `CLient ${i} has requested to play YT ID: ${VID}`);
+        if (message.startsWith("[PLAY]")) {
+            let URL = message.split("[PLAY] ")[1];
+            console.log(new Date() + `CLient ${i} has requested to play URL: ${URL}`);
             if(video.state !== "stopped") {
                 video.state = "stopped";
                 broadcast("[SYNC] STOP");
@@ -91,11 +91,10 @@ wsServer.on('request', function(request) {
             //reset everyone's state to not ready
             clients.forEach(client =>client["PLAYERSTATE"] = "NOTREADY");
 
-             video.platform = "youtube";
-             video.currentlyPlayingVideo = VID;
-             video.state = "waiting";
+            video.currentlyPlayingURL = VID;
+            video.state = "waiting";
 
-             broadcast("[PLAYYT] " + VID);
+             broadcast("[PLAY] " + VID);
             
             
             //broadcast("[CHAT] " + JSON.stringify(chatObject));
@@ -132,8 +131,8 @@ wsServer.on('request', function(request) {
             if(action === "READYTOSTART"){ // client is ready to play video
                 //check if all clients are ready, else wait.
 
-                let VID = message.split("[SYNC] ")[1].split(" READY")[0];
-                if (VID !== video.currentlyPlayingVideo) clients[1].send("[PLAYYT] " + VID);
+                let URL = message.split("[SYNC] ")[1].split(" READY")[0];
+                if (URL !== video.currentlyPlayingURL) clients[1].send("[PLAY] " + URL);
                 clients[i]["PLAYERSTATE"] = "READY";
                 var ready = true;
                 clients.forEach(client => {

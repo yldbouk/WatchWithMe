@@ -12,9 +12,7 @@ var serverStatusLabel = document.getElementById("serverStatus"),
     usersList = document.getElementById("usersList"),
     chatDiv = document.getElementById("chatDiv"),
     chatInput = document.getElementById("chatBoxInput"),
-    videoContainer = document.getElementById("videoContainer"),
     videoURLInput = document.getElementById("videoURLInput"),
-    playerYouTube = document.getElementById("playerYouTube"),
     playerLocal = document.getElementById("playerlocal"),
     youtubeVideoID,
     localPlayerURL,
@@ -34,57 +32,11 @@ var serverStatusLabel = document.getElementById("serverStatus"),
         }
     }
 
-
     var connection = { ws: null, users: [], video: {} };
     window.onbeforeunload = function(){if(connection.ws !== null){connection.ws.close(); return "haha";}};
 
 
 // define functions
-
-//-----------------------------------------YOUTUBE FUNCTIONS
-//-----------------------------------------YOUTUBE FUNCTIONS
-//-----------------------------------------YOUTUBE FUNCTIONS
-
-function watchVideoYT(url) {
-    if (url.includes("v=")) { // parse and get video id
-        youtubeVideoID = url.split("v=")[1];
-        youtubeVideoID = youtubeVideoID.split("&")[0];
-        console.log("Parsed: " + youtubeVideoID);
-    } else if (url.includes("youtu.be/")) {
-        youtubeVideoID = url.split("youtu.be/")[1];
-    }
-    if (youtubeVideoID == undefined) {
-        alert("Unable to detect YouTube Video ID. Is this a YouTube Video?");
-        return
-    }
-
-    //send request to play
-    connection.ws.send("[PLAYYT] " + youtubeVideoID);
-}
-
-function onPlayerReady(event) {
-    //event.target.playVideo();
-    connection.ws.send("[SYNC] " + youtubeVideoID + " READYTOSTART");
-    }
-
-function onPlayerStateChange(event) {
-    console.warn("[SYNC] " + youtubeVideoID + " STATE CHANGED: " + JSON.stringify(event.data));
-
-   
-
-    }
-
-function onSeek(){
-    player.pauseVideo();
-    connection.ws.send("[SYNC] SEEK " + player.getCurrentTime);
-}
-
-
-
-//-----------------------------------------
-//-----------------------------------------
-//-----------------------------------------
-
 function openTab(evt, tabName) {
     var i, tabcontent, tablinks;
     tabcontent = document.getElementsByClassName("tabcontent");
@@ -226,20 +178,8 @@ function changeConnectionStatus(mode, ip, name) {
                 
                 else
 
-                if (message.startsWith("[PLAYYT]")) {
-                    let id = message.split("[PLAYYT] ")[1];
-                    youtubeVideoID = id;
-                //    playerYouTube.style="visibility:visible;";
-                    player = new YT.Player('playerYouTube', {
-                        height: '390',
-                        width: '640',
-                        videoId: id,
-                        events: {
-                            'onReady': onPlayerReady,
-                            'onStateChange': onPlayerStateChange,
-                            'onSeek': onSeek
-                        }
-                    });
+                if (message.startsWith("[PLAY]")) {
+                   currentlyPlayingURL = message.split("[PLAY] ")[1];
                 } 
 
                 if (message.startsWith("[PLAY]")) {
