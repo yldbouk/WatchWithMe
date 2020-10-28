@@ -2,7 +2,7 @@
  WatchWithMe is a websocket-based client for watching videos with others.
 
 ## Use
-To connect and watch videos with others, click [here](https://yldbouk.github.io/WatchWithMe/client.html).
+To connect and watch videos with others, click [here](https://yldbouk.github.io/WatchWithMe/).
 
 
 ## Requirements
