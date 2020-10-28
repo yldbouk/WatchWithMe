@@ -77,29 +77,6 @@ wsServer.on('request', function(request) {
             broadcast("[CHAT] " + JSON.stringify(chatObject));
         } 
       
-        else
-        
-        if (message.startsWith("[PLAY]")) {
-            let URL = message.split("[PLAY] ")[1];
-            console.log(new Date() + `CLient ${i} has requested to play URL: ${URL}`);
-            if(video.state !== "stopped") {
-                video.state = "stopped";
-                broadcast("[SYNC] STOP");
-                setTimeout(()=>{broadcast("[PLAY] " + VID)}, 1000);
-            }
-
-            //reset everyone's state to not ready
-            clients.forEach(client =>client["PLAYERSTATE"] = "NOTREADY");
-
-            video.currentlyPlayingURL = VID;
-            video.state = "waiting";
-
-             broadcast("[PLAY] " + VID);
-            
-            
-            //broadcast("[CHAT] " + JSON.stringify(chatObject));
-        }
-        
         else 
 
         if (message.startsWith("[PLAY]")) {
@@ -115,7 +92,7 @@ wsServer.on('request', function(request) {
             clients.forEach(client =>{if(client != null) client["PLAYERSTATE"] = "NOTREADY"});
 
              video.platform = "url";
-             video.currentlyPlayingVideo = VID;
+             video.currentlyPlayingURL = VID;
              video.state = "waiting";
 
              broadcast("[PLAY] " + VID);
@@ -128,39 +105,46 @@ wsServer.on('request', function(request) {
 
         if (message.startsWith("[SYNC]")) {
             let action = message.split("[SYNC] ")[1];
-            if(action === "READYTOSTART"){ // client is ready to play video
+            if(action.startsWith("READYTOSTART")){ // client is ready to play video
                 //check if all clients are ready, else wait.
+                console.log("Client "+ i + " is ready.")
 
-                let URL = message.split("[SYNC] ")[1].split(" READY")[0];
-                if (URL !== video.currentlyPlayingURL) clients[1].send("[PLAY] " + URL);
+                let URL = action.split("READYTOSTART ")[1];
+                if (URL !== video.currentlyPlayingURL) clients[i].send("[PLAY] " + URL);
                 clients[i]["PLAYERSTATE"] = "READY";
                 var ready = true;
                 clients.forEach(client => {
                     if(client !== null && client["PLAYERSTATE"] !== "READY") ready = false;
                 });
 
-                if(ready) broadcast("[SYNC] PLAY");
-                clients.forEach(client =>client["PLAYERSTATE"] = "NOTREADY");
+                if(ready) {
+                    console.log("All clients ready. Playing...");
+                    broadcast("[SYNC] PLAY");
+                    clients.forEach(client =>{if(client !==null){ client["PLAYERSTATE"] = "NOTREADY";}}) // reset states for later
+                }
             }
 
             else
 
             if(action.includes("SEEK")) {
                 let time = action.split("SEEK ")[1];
+                console.log("Client " + i + " requested to seek to second " + time);
+                broadcast("[SYNC] SEEK "+ time);
+            }
 
+            else 
 
-                clients[i]["PLAYERSTATE"] = "READY";
-                var ready = true;
-                clients.forEach(client => {
-                    if(client !== null && client["PLAYERSTATE"] !== "READY") ready = false;
-                });
-
-                if(ready);
-
-                
-            
+            if (action === "PAUSE") {
+                console.log("Client " + i + " requested to pause");
+                broadcast("[SYNC] PAUSE");
             }
             
+            else
+
+            if (action === "PLAY") {
+                console.log("Client " + i + " requested to play")
+                broadcast("[SYNC] PLAY");
+            }
         }
 
         else
