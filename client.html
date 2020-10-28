@@ -26,20 +26,8 @@
         <div id="WatchTab" class="tabcontent">
             <h3>Watch</h3>
             <input class="chatBox" id="videoURLInput">
-            <button id="watchBtn" onclick="watchVideo(document.getElementById('videoURLInput').value)" >Play</button>
-            <video id="player"
-                autoplay="false"
-                onpause="player.paused()"
-                onplay="player.played()"
-                onplaying="player.played()"
-                onerror="player.error()"
-                onstalled="player.errored('stalled')"
-                onwaiting="player.errored('waiting')"
-                onaborted="player.errored('abort')"
-                oncanplay="player.ready()"
-                onratechange="this.playbackRate=1"
-                onseeked="player.seeked()"
-            ></video>
+            <button id="watchBtn" onclick="watchVideo(document.getElementById('videoURLInput').value)" >Play</button><br>
+            <video id="player" controls autoplay="false"onpause="player.paused()" onplay="player.played()" onplaying=" player.played()" onerror="player.error()" onstalled="player.errored('stalled')" onwaiting="player.errored('waiting')" onaborted="player.errored('abort')" oncanplay="player.ready()" onratechange="this.playbackRate=1" onseeked="player.seeked()"></video>
         </div>
           
         <div id="chatTab" class="tabcontent">
