@@ -1,13 +1,13 @@
 # WatchWithMe
- WatchWithMe is a client for watching videos with friends.
+ WatchWithMe is a websocket-based client for watching videos with others.
+
+## Use
+To connect and watch videos with others, click [here](https://yldbouk.github.io/WatchWithMe/client.html).
+
 
 ## Requirements
-- A Web Browser
 - NodeJS (Server)
+- A Web Browser
 
-## Installation
-You can get WatchWithMe from the releases page.
-
-## Running
-To run the client, open `client.html` and connect to a server. \
-To run the server, navigate your prefered terminal to the containing folder, and type `node ./server.js`.
+## Running Server
+To run the server, navigate a terminal to the repo folder, and run `node ./server.js`.
