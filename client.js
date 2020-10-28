@@ -13,23 +13,67 @@ var serverStatusLabel = document.getElementById("serverStatus"),
     chatDiv = document.getElementById("chatDiv"),
     chatInput = document.getElementById("chatBoxInput"),
     videoURLInput = document.getElementById("videoURLInput"),
-    playerLocal = document.getElementById("playerlocal"),
-    youtubeVideoID,
-    localPlayerURL,
+    playerframe = document.getElementById("player"),
     player = {
-        playVideo: function(){document.getElementById("player").play()},
-        pauseVideo: function(){document.getElementById("player").pause()},
+        serverSeek: false,
+        serverPause: false,
+        serverPlay: false,
+        currentlyPlayingURL: "",
+        playVideo: function(){playerframe.play()},
+        pauseVideo: function(){playerframe.pause()},
+        seekTo: function(time){playerframe.currentTime=time},
         play: function(url){
-            document.getElementById("player").style = "visibility: visible";
-            document.getElementById("player").innerHTML = "";
+            playerframe.style = "visibility: visible";
+            playerframe.innerHTML = "";
             var newSource = '<source src=' + url + '>';
-            document.getElementById("player").insertAdjacentHTML('beforeend', newSource);
-            document.getElementById("player").load(url)
+            playerframe.insertAdjacentHTML('beforeend', newSource);
+            playerframe.load(url);
+            playerframe.pause();
         },
         destroy: function(){
-            document.getElementById("player").innerHTML = ""; 
-            document.getElementById("player").load()
-        }
+            playerframe.innerHTML = ""; 
+            playerframe.load()
+        },
+        played: function(){
+            if (!this.serverPlay) {
+                console.log("played");
+                connection.ws.send("[SYNC] PLAY");
+
+            } else this.serverPlay = false;
+        },
+        paused: function(){
+            if (!this.serverPause) {
+                console.log("paused");
+                connection.ws.send("[SYNC] PAUSE");
+            } else this.serverPause = false;
+        },
+        ready: function(){
+            if (this.discardReady == false) {
+                console.log("ready");
+                this.pauseVideo();
+                connection.ws.send("[SYNC] READYTOSTART "+ player.currentlyPlayingURL)
+            }
+        },
+        seeked: function(){
+            if (!this.serverSeek) { // determine if the client or server seeked
+                console.log("seeked");
+                this.pauseVideo();
+                connection.ws.send("[SYNC] SEEK " + playerframe.currentTime);
+                this.serverSeek=false;
+            } else this.serverSeek = false;
+            
+        },
+        errored: function(error){
+            console.error("VIDEO ERROR:" + error)
+            if(error === "waiting") {
+                this.videoErrored = true;
+                this.paused()
+                
+            }
+    
+        },
+        videoErrored: false
+
     }
 
     var connection = { ws: null, users: [], video: {} };
@@ -82,12 +126,9 @@ function sendChatMessage(message) {
     chatInput.value = "";
 }
 
-function queueVideo(url) {
-    //check for youtube
-    if (url.includes("https://www.youtube.com/" || "https://yt.be/")){ watchVideoYT(url); return }
-        
+function watchVideo(url) {
     connection.ws.send("[PLAY] " + url);
-        console.log("sent status");
+        console.log("Sent request to play video");
 }
 
 function changeConnectionStatus(mode, ip, name) {
@@ -156,16 +197,27 @@ function changeConnectionStatus(mode, ip, name) {
                 else
 
                 if (message.startsWith("[SYNC]")) {
-                    // parse and do stuff
                     let action = message.split("[SYNC] ")[1];
 
-                    if(action === "PLAY") player.playVideo(); else
-                    if(action === "PAUSE") player.pauseVideo(); else
+                    if(action === "PLAY"){
+                        player.serverPlay = true;
+                        player.playVideo(); 
+                        
+                    }
+                        else
+
+                    if(action === "PAUSE"){
+                        player.serverPause = true;
+                        player.pauseVideo(); 
+                    }
+                        else
+                        
                     if(action === "STOP") player.destroy(); else
                     if(action.includes("SEEK")){
                         let time = action.split("SEEK ")[1];
-                        player.seekTo(time);
                         player.pauseVideo();
+                        player.serverSeek = true;
+                        player.seekTo(time);
                     }
                 }
 
@@ -179,15 +231,10 @@ function changeConnectionStatus(mode, ip, name) {
                 else
 
                 if (message.startsWith("[PLAY]")) {
-                   currentlyPlayingURL = message.split("[PLAY] ")[1];
-                } 
-
-                if (message.startsWith("[PLAY]")) {
                     let url = message.split("[PLAY] ")[1];
-                    localPlayerURL = url;
+                    player.currentlyPlayingURL = url;
                     player.play(url);
-                    
-                    
+                    console.log("request to play: " + url);
                 } 
 
                 else 
